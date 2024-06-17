@@ -7,7 +7,7 @@ import fr.gouv.monprojetsup.recherche.domain.entity.Domaine
 import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationAutoEvaluationMoyenne
 import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationTypeBaccalaureat
 import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation
-import fr.gouv.monprojetsup.recherche.domain.entity.Interet
+import fr.gouv.monprojetsup.recherche.domain.entity.InteretSousCategorie
 import fr.gouv.monprojetsup.recherche.domain.entity.ProfilEleve
 import fr.gouv.monprojetsup.recherche.domain.port.BaccalaureatRepository
 import fr.gouv.monprojetsup.recherche.domain.port.DomaineRepository
@@ -61,11 +61,11 @@ class RecupererFormationService(
                         pourcentage = it.pourcentage,
                     )
                 }
-            val (domaines: List<Domaine>?, interets: List<Interet>?) =
+            val (domaines: List<Domaine>?, interets: List<InteretSousCategorie>?) =
                 explications.interetsEtDomainesChoisis.takeUnless { it.isEmpty() }
                     ?.let {
                         val domaines = domaineRepository.recupererLesDomaines(it)
-                        val interets = interetRepository.recupererLesInterets(it)
+                        val interets = interetRepository.recupererLesSousCategoriesDInterets(it)
                         Pair(domaines, interets)
                     } ?: Pair(null, null)
             val formationsSimilaires =

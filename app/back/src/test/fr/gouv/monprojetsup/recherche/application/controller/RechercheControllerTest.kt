@@ -15,7 +15,7 @@ import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation
 import fr.gouv.monprojetsup.recherche.domain.entity.Formation
 import fr.gouv.monprojetsup.recherche.domain.entity.FormationDetaillee
 import fr.gouv.monprojetsup.recherche.domain.entity.FormationPourProfil
-import fr.gouv.monprojetsup.recherche.domain.entity.Interet
+import fr.gouv.monprojetsup.recherche.domain.entity.InteretSousCategorie
 import fr.gouv.monprojetsup.recherche.domain.entity.MetierDetaille
 import fr.gouv.monprojetsup.recherche.domain.entity.ProfilEleve
 import fr.gouv.monprojetsup.recherche.usecase.RecupererFormationService
@@ -251,7 +251,7 @@ class RechercheControllerTest(
                         listOf(
                             Domaine(id = "T_ITM_1356", nom = "soin aux animaux"),
                         ),
-                    interets = listOf(Interet(id = "T_ROME_731379930", nom = "je veux aider les autres")),
+                    interets = listOf(InteretSousCategorie(id = "T_ROME_731379930", nom = "je veux aider les autres")),
                     explicationAutoEvaluationMoyenne =
                         ExplicationAutoEvaluationMoyenne(
                             baccalaureat = Baccalaureat("Générale", "Générale", "Série Générale"),

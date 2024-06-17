@@ -10,7 +10,7 @@ sealed class FicheFormation(
         override val tauxAffinite: Int?,
         val explications: ExplicationsSuggestion?,
         val formationsSimilaires: List<Formation>?,
-        val interets: List<Interet>?,
+        val interets: List<InteretSousCategorie>?,
         val domaines: List<Domaine>?,
         val explicationAutoEvaluationMoyenne: ExplicationAutoEvaluationMoyenne?,
         val explicationTypeBaccalaureat: ExplicationTypeBaccalaureat?,
@@ -31,11 +31,6 @@ sealed class FicheFormation(
             communes = communes,
         )
 }
-
-data class Interet(
-    val id: String,
-    val nom: String,
-)
 
 data class Domaine(
     val id: String,
