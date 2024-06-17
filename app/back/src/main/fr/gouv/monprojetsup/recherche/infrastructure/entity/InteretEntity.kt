@@ -1,6 +1,6 @@
 package fr.gouv.monprojetsup.recherche.infrastructure.entity
 
-import fr.gouv.monprojetsup.recherche.domain.entity.Interet
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Interet
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id

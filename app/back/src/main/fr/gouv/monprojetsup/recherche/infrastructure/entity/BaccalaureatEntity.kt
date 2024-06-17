@@ -1,6 +1,6 @@
 package fr.gouv.monprojetsup.recherche.infrastructure.entity
 
-import fr.gouv.monprojetsup.recherche.domain.entity.Baccalaureat
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Baccalaureat
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id

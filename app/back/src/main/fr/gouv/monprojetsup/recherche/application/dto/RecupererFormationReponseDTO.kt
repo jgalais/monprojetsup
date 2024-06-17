@@ -1,12 +1,14 @@
 package fr.gouv.monprojetsup.recherche.application.dto
 
-import fr.gouv.monprojetsup.recherche.domain.entity.Domaine
-import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationAutoEvaluationMoyenne
-import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationTypeBaccalaureat
 import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationsSuggestion
 import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Domaine
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.ExplicationAutoEvaluationMoyenne
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.ExplicationTypeBaccalaureat
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Interet
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.MoyenneGeneraleDesAdmis
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.MoyenneGeneraleDesAdmis.Centille
 import fr.gouv.monprojetsup.recherche.domain.entity.Formation
-import fr.gouv.monprojetsup.recherche.domain.entity.Interet
 import fr.gouv.monprojetsup.recherche.domain.entity.MetierDetaille
 
 data class RecupererFormationReponseDTO(
@@ -40,12 +42,9 @@ data class RecupererFormationReponseDTO(
                     descriptifDiplome = formation.descriptifDiplome,
                     descriptifAttendus = formation.descriptifAttendus,
                     moyenneGeneraleDesAdmis =
-                        MoyenneGeneraleDesAdmisDTO(
-                            idBaccalaureat = "",
-                            nomBaccalaureat = "",
-                            centilles = listOf(),
+                        MoyenneGeneraleDesAdmisDTO.fromMoyenneGeneraleDesAdmis(
+                            ficheFormation.moyenneGeneraleDesAdmis,
                         ),
-                    // TODO #64
                     descriptifConseils = formation.descriptifConseils,
                     liens = emptyList(), // TODO #66
                     villes =
@@ -116,14 +115,31 @@ data class RecupererFormationReponseDTO(
         }
 
         data class MoyenneGeneraleDesAdmisDTO(
-            val idBaccalaureat: String,
+            val idBaccalaureat: String?,
             val nomBaccalaureat: String?,
             val centilles: List<CentilleDTO>,
         ) {
             data class CentilleDTO(
                 val centille: Int,
                 val note: Float,
-            )
+            ) {
+                companion object {
+                    fun fromCentille(centille: Centille) =
+                        CentilleDTO(
+                            centille = centille.centille,
+                            note = centille.note,
+                        )
+                }
+            }
+
+            companion object {
+                fun fromMoyenneGeneraleDesAdmis(moyenneGeneraleDesAdmis: MoyenneGeneraleDesAdmis) =
+                    MoyenneGeneraleDesAdmisDTO(
+                        idBaccalaureat = moyenneGeneraleDesAdmis.idBaccalaureat,
+                        nomBaccalaureat = moyenneGeneraleDesAdmis.nomBaccalaureat,
+                        centilles = moyenneGeneraleDesAdmis.centilles.map { CentilleDTO.fromCentille(it) },
+                    )
+            }
         }
     }
 

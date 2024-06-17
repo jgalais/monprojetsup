@@ -3,19 +3,21 @@ package fr.gouv.monprojetsup.recherche.application.controller
 import fr.gouv.monprojetsup.commun.erreur.domain.MonProjetIllegalStateErrorException
 import fr.gouv.monprojetsup.commun.erreur.domain.MonProjetSupInternalErrorException
 import fr.gouv.monprojetsup.commun.erreur.domain.MonProjetSupNotFoundException
-import fr.gouv.monprojetsup.recherche.domain.entity.Baccalaureat
 import fr.gouv.monprojetsup.recherche.domain.entity.ChoixAlternance
 import fr.gouv.monprojetsup.recherche.domain.entity.ChoixDureeEtudesPrevue
 import fr.gouv.monprojetsup.recherche.domain.entity.ChoixNiveau
-import fr.gouv.monprojetsup.recherche.domain.entity.Domaine
-import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationAutoEvaluationMoyenne
-import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationTypeBaccalaureat
 import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationsSuggestion
 import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Baccalaureat
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Domaine
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.ExplicationAutoEvaluationMoyenne
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.ExplicationTypeBaccalaureat
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Interet
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.MoyenneGeneraleDesAdmis
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.MoyenneGeneraleDesAdmis.Centille
 import fr.gouv.monprojetsup.recherche.domain.entity.Formation
 import fr.gouv.monprojetsup.recherche.domain.entity.FormationDetaillee
 import fr.gouv.monprojetsup.recherche.domain.entity.FormationPourProfil
-import fr.gouv.monprojetsup.recherche.domain.entity.Interet
 import fr.gouv.monprojetsup.recherche.domain.entity.MetierDetaille
 import fr.gouv.monprojetsup.recherche.domain.entity.ProfilEleve
 import fr.gouv.monprojetsup.recherche.usecase.RecupererFormationService
@@ -315,6 +317,18 @@ class RechercheControllerTest(
                             baccalaureat = Baccalaureat("Générale", "Général", "Série Générale"),
                             pourcentage = 18,
                         ),
+                    moyenneGeneraleDesAdmis =
+                        MoyenneGeneraleDesAdmis(
+                            idBaccalaureat = "Général",
+                            nomBaccalaureat = "Série Générale",
+                            centilles =
+                                listOf(
+                                    Centille(centille = 5, note = 13f),
+                                    Centille(centille = 25, note = 14.5f),
+                                    Centille(centille = 75, note = 17f),
+                                    Centille(centille = 95, note = 18f),
+                                ),
+                        ),
                 )
             given(recupererFormationService.recupererFormation(unProfil, "fl680002")).willReturn(ficheFormation)
 
@@ -338,9 +352,26 @@ class RechercheControllerTest(
                             "descriptifConseils": "Nous vous conseillons de développer une sensibilité artistique et de rester informé des tendances actuelles en matière de design floral pour exceller dans ce domaine.",
                             "descriptifAttendus": "Il est attendu des candidats de démontrer une solide compréhension des techniques de base de la floristerie, y compris la composition florale, la reconnaissance des plantes et des fleurs, ainsi que les soins et l'entretien des végétaux.",
                             "moyenneGeneraleDesAdmis": {
-                              "idBaccalaureat": "",
-                              "nomBaccalaureat": "",
-                              "centilles": []
+                              "idBaccalaureat": "Général",
+                              "nomBaccalaureat": "Série Générale",
+                              "centilles": [
+                                {
+                                  "centille": 5,
+                                  "note": 13.0
+                                },
+                                {
+                                  "centille": 25,
+                                  "note": 14.5
+                                },
+                                {
+                                  "centille": 75,
+                                  "note": 17.0
+                                },
+                                {
+                                  "centille": 95,
+                                  "note": 18.0
+                                }
+                              ]
                             },
                             "criteresAnalyseCandidature": {
                               "nom": "",
@@ -423,6 +454,7 @@ class RechercheControllerTest(
                               }
                             ],
                             "typeBaccalaureat": {
+                              "idBaccalaureat": "Générale",
                               "nomBaccalaureat": "Série Générale",
                               "pourcentage": 18
                             },
@@ -500,6 +532,18 @@ class RechercheControllerTest(
                             "Paris  5e  Arrondissement",
                             "Paris 16e  Arrondissement",
                         ),
+                    moyenneGeneraleDesAdmis =
+                        MoyenneGeneraleDesAdmis(
+                            idBaccalaureat = null,
+                            nomBaccalaureat = null,
+                            centilles =
+                                listOf(
+                                    Centille(5, 12.5f),
+                                    Centille(25, 14.5f),
+                                    Centille(75, 17f),
+                                    Centille(95, 18f),
+                                ),
+                        ),
                 )
             given(recupererFormationService.recupererFormation(null, "fl680002")).willReturn(ficheFormation)
 
@@ -528,9 +572,26 @@ class RechercheControllerTest(
                             "descriptifConseils": "Nous vous conseillons de développer une sensibilité artistique et de rester informé des tendances actuelles en matière de design floral pour exceller dans ce domaine.",
                             "descriptifAttendus": "Il est attendu des candidats de démontrer une solide compréhension des techniques de base de la floristerie, y compris la composition florale, la reconnaissance des plantes et des fleurs, ainsi que les soins et l'entretien des végétaux.",
                             "moyenneGeneraleDesAdmis": {
-                              "idBaccalaureat": "",
-                              "nomBaccalaureat": "",
-                              "centilles": []
+                              "idBaccalaureat": null,
+                              "nomBaccalaureat": null,
+                              "centilles": [
+                                {
+                                  "centille": 5,
+                                  "note": 12.5
+                                },
+                                {
+                                  "centille": 25,
+                                  "note": 14.5
+                                },
+                                {
+                                  "centille": 75,
+                                  "note": 17.0
+                                },
+                                {
+                                  "centille": 95,
+                                  "note": 18.0
+                                }
+                              ]
                             },
                             "criteresAnalyseCandidature": {
                               "nom": "",

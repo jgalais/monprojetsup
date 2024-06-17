@@ -1,7 +1,7 @@
 package fr.gouv.monprojetsup.recherche.infrastructure.repository
 
 import fr.gouv.monprojetsup.commun.infrastructure.repository.BDDRepositoryTest
-import fr.gouv.monprojetsup.recherche.domain.entity.Domaine
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Domaine
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

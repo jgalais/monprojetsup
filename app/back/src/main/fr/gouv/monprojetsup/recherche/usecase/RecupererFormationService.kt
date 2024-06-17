@@ -1,13 +1,19 @@
 package fr.gouv.monprojetsup.recherche.usecase
 
+import fr.gouv.monprojetsup.commun.Constantes.TAILLE_ECHELLON_NOTES
 import fr.gouv.monprojetsup.commun.erreur.domain.MonProjetIllegalStateErrorException
 import fr.gouv.monprojetsup.commun.erreur.domain.MonProjetSupNotFoundException
-import fr.gouv.monprojetsup.recherche.domain.entity.Baccalaureat
-import fr.gouv.monprojetsup.recherche.domain.entity.Domaine
-import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationAutoEvaluationMoyenne
-import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationTypeBaccalaureat
+import fr.gouv.monprojetsup.recherche.domain.entity.AffinitesPourProfil.FormationAvecSonAffinite
+import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationsSuggestion
+import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationsSuggestion.ExplicationGeographique
+import fr.gouv.monprojetsup.recherche.domain.entity.ExplicationsSuggestion.TypeBaccalaureat
 import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation
-import fr.gouv.monprojetsup.recherche.domain.entity.Interet
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Baccalaureat
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Domaine
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.ExplicationAutoEvaluationMoyenne
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.ExplicationTypeBaccalaureat
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Interet
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.MoyenneGeneraleDesAdmis
 import fr.gouv.monprojetsup.recherche.domain.entity.ProfilEleve
 import fr.gouv.monprojetsup.recherche.domain.port.BaccalaureatRepository
 import fr.gouv.monprojetsup.recherche.domain.port.DomaineRepository
@@ -26,85 +32,109 @@ class RecupererFormationService(
     val baccalaureatRepository: BaccalaureatRepository,
     val interetRepository: InteretRepository,
     val domaineRepository: DomaineRepository,
+    val moyenneGeneraleDesAdmisService: MoyenneGeneraleDesAdmisService,
 ) {
-    companion object {
-        private const val TAILLE_ECHELLON_NOTES = 0.5f
-    }
-
     @Throws(MonProjetIllegalStateErrorException::class, MonProjetSupNotFoundException::class)
     fun recupererFormation(
         profilEleve: ProfilEleve?,
         idFormation: String,
     ): FicheFormation {
         val formation = formationRepository.recupererUneFormationAvecSesMetiers(idFormation)
-        val tripletsAffectations =
-            tripletAffectationRepository.recupererLesTripletsAffectationDUneFormation(formation.id)
+        val tripletsAffectations = tripletAffectationRepository.recupererLesTripletsAffectationDUneFormation(formation.id)
+        val moyenneGeneraleDesAdmis = recupererMoyenneGeneraleDesAdmis(idBaccalaureat = profilEleve?.bac, idFormation = formation.id)
         return if (profilEleve != null) {
             val explications = suggestionHttpClient.recupererLesExplications(profilEleve, formation.id)
-            val explicationsGeographiquesFiltrees =
-                explications.geographique.sortedBy { it.distanceKm }.distinctBy { it.ville }
-            val explicationAutoEvaluationMoyenne =
-                explications.autoEvaluationMoyenne?.let {
-                    val baccalaureat = baccalaureatRepository.recupererUnBaccalaureatParIdExterne(it.bacUtilise)
-                    ExplicationAutoEvaluationMoyenne(
-                        baccalaureat = baccalaureat ?: Baccalaureat(it.bacUtilise, it.bacUtilise, it.bacUtilise),
-                        moyenneAutoEvalue = it.moyenneAutoEvalue,
-                        basIntervalleNotes = it.rangs.rangEch25 * TAILLE_ECHELLON_NOTES,
-                        hautIntervalleNotes = it.rangs.rangEch75 * TAILLE_ECHELLON_NOTES,
-                    )
-                }
-            val explicationTypeBaccalaureat =
-                explications.typeBaccalaureat?.let {
-                    val baccalaureat = baccalaureatRepository.recupererUnBaccalaureatParIdExterne(it.nomBaccalaureat)
-                    ExplicationTypeBaccalaureat(
-                        baccalaureat = baccalaureat ?: Baccalaureat(it.nomBaccalaureat, it.nomBaccalaureat, it.nomBaccalaureat),
-                        pourcentage = it.pourcentage,
-                    )
-                }
             val (domaines: List<Domaine>?, interets: List<Interet>?) =
-                explications.interetsEtDomainesChoisis.takeUnless { it.isEmpty() }
-                    ?.let {
-                        val domaines = domaineRepository.recupererLesDomaines(it)
-                        val interets = interetRepository.recupererLesInterets(it)
-                        Pair(domaines, interets)
-                    } ?: Pair(null, null)
+                explications.interetsEtDomainesChoisis.takeUnless {
+                    it.isEmpty()
+                }?.let {
+                    val domaines = domaineRepository.recupererLesDomaines(it)
+                    val interets = interetRepository.recupererLesInterets(it)
+                    Pair(domaines, interets)
+                } ?: Pair(null, null)
             val formationsSimilaires =
                 explications.formationsSimilaires.takeUnless { it.isEmpty() }?.let {
                     formationRepository.recupererLesNomsDesFormations(it)
                 }
-
             val affinitesFormationEtMetier = suggestionHttpClient.recupererLesAffinitees(profilEleve)
-            val nomMetiersTriesParAffinites =
-                TrieParProfilBuilder.trierMetiersParAffinites(
-                    metiers = formation.metiers,
-                    idsMetierTriesParAffinite = affinitesFormationEtMetier.metiersTriesParAffinites,
-                )
-            val nomCommunesTriesParAffinites =
-                TrieParProfilBuilder.getNomCommunesTriesParAffinites(
-                    tripletsAffectation = tripletsAffectations,
-                    communesFavorites = profilEleve.villesPreferees,
-                )
-            val tauxAffinite =
-                affinitesFormationEtMetier.formations.firstOrNull {
-                    it.idFormation == formation.id
-                }?.tauxAffinite?.let { (it * 100).roundToInt() } ?: 0
             FicheFormation.FicheFormationPourProfil(
                 formation = formation,
-                tauxAffinite = tauxAffinite,
-                metiersTriesParAffinites = nomMetiersTriesParAffinites,
-                communesTrieesParAffinites = nomCommunesTriesParAffinites,
-                explications = explications.copy(geographique = explicationsGeographiquesFiltrees),
+                tauxAffinite =
+                    calculDuTauxDAffinite(
+                        formationAvecLeurAffinite = affinitesFormationEtMetier.formations,
+                        idFormation = formation.id,
+                    ),
+                metiersTriesParAffinites =
+                    TrieParProfilBuilder.trierMetiersParAffinites(
+                        metiers = formation.metiers,
+                        idsMetierTriesParAffinite = affinitesFormationEtMetier.metiersTriesParAffinites,
+                    ),
+                communesTrieesParAffinites =
+                    TrieParProfilBuilder.getNomCommunesTriesParAffinites(
+                        tripletsAffectation = tripletsAffectations,
+                        communesFavorites = profilEleve.villesPreferees,
+                    ),
+                explications = explications.copy(geographique = filtrerEtTrier(explications.geographique)),
                 domaines = domaines,
                 interets = interets,
-                explicationAutoEvaluationMoyenne = explicationAutoEvaluationMoyenne,
+                explicationAutoEvaluationMoyenne = recupererExplicationAutoEvaluationMoyenne(explications),
                 formationsSimilaires = formationsSimilaires,
-                explicationTypeBaccalaureat = explicationTypeBaccalaureat,
+                explicationTypeBaccalaureat = recupererExplicationTypeBaccalaureat(explications.typeBaccalaureat),
+                moyenneGeneraleDesAdmis = moyenneGeneraleDesAdmis,
             )
         } else {
             FicheFormation.FicheFormationSansProfil(
                 formation = formation,
                 communes = tripletsAffectations.map { it.commune }.distinct(),
+                moyenneGeneraleDesAdmis = moyenneGeneraleDesAdmis,
             )
         }
+    }
+
+    private fun recupererMoyenneGeneraleDesAdmis(
+        idBaccalaureat: String?,
+        idFormation: String,
+    ): MoyenneGeneraleDesAdmis {
+        val baccalaureat = idBaccalaureat?.let { baccalaureatRepository.recupererUnBaccalaureat(it) }
+        return moyenneGeneraleDesAdmisService.recupererMoyenneGeneraleDesAdmisDUneFormation(baccalaureat, idFormation)
+    }
+
+    private fun filtrerEtTrier(explicationsGeographique: List<ExplicationGeographique>): List<ExplicationGeographique> {
+        val explicationsGeographiquesFiltrees = explicationsGeographique.sortedBy { it.distanceKm }.distinctBy { it.ville }
+        return explicationsGeographiquesFiltrees
+    }
+
+    private fun recupererExplicationAutoEvaluationMoyenne(explications: ExplicationsSuggestion): ExplicationAutoEvaluationMoyenne? {
+        return explications.autoEvaluationMoyenne?.let {
+            val baccalaureat = baccalaureatRepository.recupererUnBaccalaureatParIdExterne(it.bacUtilise)
+            ExplicationAutoEvaluationMoyenne(
+                baccalaureat = baccalaureat ?: Baccalaureat(it.bacUtilise, it.bacUtilise, it.bacUtilise),
+                moyenneAutoEvalue = it.moyenneAutoEvalue,
+                basIntervalleNotes = it.rangs.rangEch25 * TAILLE_ECHELLON_NOTES,
+                hautIntervalleNotes = it.rangs.rangEch75 * TAILLE_ECHELLON_NOTES,
+            )
+        }
+    }
+
+    private fun recupererExplicationTypeBaccalaureat(typeBaccalaureat: TypeBaccalaureat?): ExplicationTypeBaccalaureat? {
+        return typeBaccalaureat?.let {
+            val baccalaureat = baccalaureatRepository.recupererUnBaccalaureatParIdExterne(it.nomBaccalaureat)
+            ExplicationTypeBaccalaureat(
+                baccalaureat =
+                    baccalaureat ?: Baccalaureat(
+                        it.nomBaccalaureat,
+                        it.nomBaccalaureat,
+                        it.nomBaccalaureat,
+                    ),
+                pourcentage = it.pourcentage,
+            )
+        }
+    }
+
+    private fun calculDuTauxDAffinite(
+        formationAvecLeurAffinite: List<FormationAvecSonAffinite>,
+        idFormation: String,
+    ): Int {
+        return formationAvecLeurAffinite.firstOrNull { it.idFormation == idFormation }?.tauxAffinite?.let { (it * 100).roundToInt() } ?: 0
     }
 }

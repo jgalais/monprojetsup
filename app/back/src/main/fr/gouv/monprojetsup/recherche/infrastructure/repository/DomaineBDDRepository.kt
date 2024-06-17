@@ -1,6 +1,6 @@
 package fr.gouv.monprojetsup.recherche.infrastructure.repository
 
-import fr.gouv.monprojetsup.recherche.domain.entity.Domaine
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Domaine
 import fr.gouv.monprojetsup.recherche.domain.port.DomaineRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional

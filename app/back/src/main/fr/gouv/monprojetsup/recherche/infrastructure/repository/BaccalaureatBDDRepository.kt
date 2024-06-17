@@ -1,6 +1,6 @@
 package fr.gouv.monprojetsup.recherche.infrastructure.repository
 
-import fr.gouv.monprojetsup.recherche.domain.entity.Baccalaureat
+import fr.gouv.monprojetsup.recherche.domain.entity.FicheFormation.Baccalaureat
 import fr.gouv.monprojetsup.recherche.domain.port.BaccalaureatRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
@@ -12,5 +12,9 @@ class BaccalaureatBDDRepository(
     @Transactional(readOnly = true)
     override fun recupererUnBaccalaureatParIdExterne(idExterneBaccalaureat: String): Baccalaureat? {
         return baccalaureatJPARepository.findByIdExterne(idExterneBaccalaureat)?.toBaccalaureat()
+    }
+
+    override fun recupererUnBaccalaureat(id: String): Baccalaureat? {
+        return baccalaureatJPARepository.findById(id).orElse(null)?.toBaccalaureat()
     }
 }
